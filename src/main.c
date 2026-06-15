@@ -21,7 +21,13 @@ Finalizar o dia   - FE
 */
 
 // Assinaturas das funções
-void inserir_produto(int *nprodutos,char nome_produto[100],int qntd_produto,float preco_produto);
+typedef struct {
+    char nome[100];
+    int quantidade;
+    float preco;
+} Produto;
+
+void inserir_produto(Produto *produtos,int *nprodutos,char nome_produto[100],int qntd_produto,float preco_produto);
 void aumentar_estoque(int codigo_produto, int qntd_aumentar);
 void modificar_preco(int codigo_produto, float novo_preco);
 void vender(int codigo_produto,int *preco_total);
@@ -29,10 +35,13 @@ void consultar_estoque();
 void consultar_saldo();
 void finalizar_dia();
 
+
+
 int main(void)
 {
-    int nProdutos =0;
+    int nProdutos = 0;
     char comando[2];
+    Produto *produtos = NULL; // para guardar os produtos cadastrados
     scanf(" %s", comando);
 
     while(comando[0] != 'F' || comando[1] != 'E')
@@ -88,7 +97,7 @@ int main(void)
 
 }
 
-void inserir_produto(int *nprodutos, char nome_produto[100],int qntd_produto,float preco_produto)
+void inserir_produto(Produto *produtos, int *nprodutos, char nome_produto[100],int qntd_produto,float preco_produto)
 {
-
+    Produto p = {nome_produto, qntd_produto, preco_produto};
 }
