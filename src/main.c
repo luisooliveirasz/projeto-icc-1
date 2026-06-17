@@ -106,18 +106,19 @@ int main(void)
             }
             printf("Total: %.2f\n", preco_total);
             saldo += preco_total;
-            
+            printf("%s", BARRA_HORIZONTAL);
         }
         else if(strcmp(comando, "CE") == 0)
         {
             consultar_estoque(&estoque);
+            printf("%s", BARRA_HORIZONTAL);
         }
         else if(strcmp(comando, "CS") == 0)
         {
             consultar_saldo(saldo);
+            printf("%s", BARRA_HORIZONTAL);
         }
         scanf(" %s", comando);
-        printf("%s", BARRA_HORIZONTAL);
     }
     
     finalizar_dia(&estoque);
@@ -198,5 +199,13 @@ void consultar_saldo(float saldo)
 
 void finalizar_dia(Estoque *estoque)
 {
-    
+    FILE *fp;
+    fp = fopen("estoque.txt", "wb");
+
+    if (!fp) return;
+
+    fwrite(&estoque->qntd_produtos, sizeof(size_t), 1, fp);
+    fwrite(&estoque->produtos, sizeof(Produto), estoque->qntd_produtos, fp);
+
+    fclose(fp);
 }
