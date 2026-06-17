@@ -44,11 +44,11 @@ typedef struct {
 
 // Assinaturas das funções
 void inserir_produto(Estoque *estoque, char nome_produto[100], int qntd_produto, float preco_produto);
-void aumentar_estoque(Estoque *estoque, int codigo_produto, int qntd_aumentar);
+void aumentar_estoque(Estoque *estoque, int codigo_produto, int qntd_aumentar, float *saldo);
 void modificar_preco(Estoque *estoque, int codigo_produto, float novo_preco);
-void vender(Estoque *estoque, int codigo_produto, float *preco_total);
+void vender(Estoque *estoque, int codigo_produto, float *preco_total, float *saldo);
 void consultar_estoque(Estoque *estoque);
-void consultar_saldo(Estoque *estoque);
+void consultar_saldo(float saldo);
 void finalizar_dia(Estoque *estoque);
 
 
@@ -57,8 +57,8 @@ const char BARRA_HORIZONTAL[] = "-----------------------------------------------
 
 int main(void)
 {
-    int nProdutos = 0;
     char comando[3]; // 3 caracteres (2 para o comando + 1 para o terminador)
+    float saldo = 100.0f; // Saldo inicial do caixa
 
     Estoque estoque = {
         .produtos = NULL,
@@ -85,7 +85,7 @@ int main(void)
             int codigo_produto;
             int qntd_aumentar;
             scanf(" %d %d", &codigo_produto, &qntd_aumentar);
-            aumentar_estoque(&estoque, codigo_produto, qntd_aumentar);
+            aumentar_estoque(&estoque, codigo_produto, qntd_aumentar, &saldo);
         }
         else if(strcmp(comando, "MP") == 0)
         {
@@ -101,10 +101,11 @@ int main(void)
             scanf(" %d", &codigo_produto);
             while(codigo_produto != -1)
             {
-                vender(&estoque, codigo_produto, &preco_total);
+                vender(&estoque, codigo_produto, &preco_total, &saldo);
                 scanf(" %d", &codigo_produto);
             }
             printf("Total: %.2f\n", preco_total);
+            saldo += preco_total;
             
         }
         else if(strcmp(comando, "CE") == 0)
@@ -113,7 +114,7 @@ int main(void)
         }
         else if(strcmp(comando, "CS") == 0)
         {
-            consultar_saldo(&estoque);
+            consultar_saldo(saldo);
         }
         scanf(" %s", comando);
         printf("%s", BARRA_HORIZONTAL);
@@ -156,7 +157,7 @@ void inserir_produto(Estoque *estoque, char nome_produto[100], int qntd_produto,
     estoque->produtos[estoque->qntd_produtos++] = p;
 }
 
-void aumentar_estoque(Estoque *estoque, int codigo_produto, int qntd_aumentar)
+void aumentar_estoque(Estoque *estoque, int codigo_produto, int qntd_aumentar, float *saldo)
 {
     (estoque->produtos)[codigo_produto - 1].quantidade += qntd_aumentar;
 }
@@ -176,12 +177,21 @@ void vender(Estoque *estoque, int codigo_produto, float *preco_total)
 
 void consultar_estoque(Estoque *estoque)
 {
-
+    if(estoque->qntd_produtos == 0)
+    {
+        printf("Estoque vazio.\n");
+        return;
+    }
+    for(int i = 0; i < estoque->qntd_produtos; i++)
+    {
+        Produto *p = &(estoque->produtos[i]);
+        printf("Código: %d Nome: %s Quantidade: %d\n", i + 1, p->nome, p->quantidade);
+    }
 }
 
-void consultar_saldo(Estoque *estoque)
+void consultar_saldo(float saldo)
 {
-
+    printf("Saldo: %.2f\n", saldo);
 }
 
 void finalizar_dia(Estoque *estoque)
