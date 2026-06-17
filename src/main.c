@@ -11,7 +11,7 @@ typedef struct {
 // Estoque de produtos (funciona como um array dinâmico)
 typedef struct {
     Produto *produtos; // Vetor que guarda os produtos
-    size_t qntd_produtos; // Tamanho do vetor
+    size_t qntd_produtos;
     size_t capacidade; // Capacidade do estoque, relacionada ao tamanho da memória alocada
 } Estoque;
 
