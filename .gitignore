@@ -1,3 +1,7 @@
-.exe
-.out
-/build
+*.exe
+*.out
+
+/build/
+
+/src/estoque.bin
+/src/main
