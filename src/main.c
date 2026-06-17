@@ -205,7 +205,7 @@ void finalizar_dia(Estoque *estoque)
     if (!fp) return;
 
     fwrite(&estoque->qntd_produtos, sizeof(size_t), 1, fp);
-    fwrite(&estoque->produtos, sizeof(Produto), estoque->qntd_produtos, fp);
+    fwrite(estoque->produtos, sizeof(Produto), estoque->qntd_produtos, fp);
 
     fclose(fp);
 }
