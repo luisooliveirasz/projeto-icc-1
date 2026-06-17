@@ -66,6 +66,8 @@ int main(void)
         .capacidade = 10 // Capacidade inicial
     }; // para guardar os produtos cadastrados
 
+    estoque.produtos = (Produto*) malloc(sizeof(Produto) * estoque.capacidade);
+
     scanf(" %s", comando);
 
     while (strcmp(comando, "FE") != 0)
@@ -114,6 +116,7 @@ int main(void)
             consultar_saldo(&estoque);
         }
         scanf(" %s", comando);
+        printf("%s", BARRA_HORIZONTAL);
     }
     
     finalizar_dia(&estoque);
@@ -161,4 +164,27 @@ void aumentar_estoque(Estoque *estoque, int codigo_produto, int qntd_aumentar)
 void modificar_preco(Estoque *estoque, int codigo_produto, float novo_preco)
 {
     (estoque->produtos)[codigo_produto - 1].preco = novo_preco;
+}
+
+void vender(Estoque *estoque, int codigo_produto, float *preco_total)
+{
+    Produto *p = &(estoque->produtos[codigo_produto]);
+    p->quantidade--;
+    *preco_total += p->preco;
+    printf("%s %.2f\n", p->nome, p->preco);
+}
+
+void consultar_estoque(Estoque *estoque)
+{
+
+}
+
+void consultar_saldo(Estoque *estoque)
+{
+
+}
+
+void finalizar_dia(Estoque *estoque)
+{
+    
 }
