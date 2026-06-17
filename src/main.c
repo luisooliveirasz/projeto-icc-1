@@ -46,7 +46,7 @@ typedef struct {
 void inserir_produto(Estoque *estoque, char nome_produto[100], int qntd_produto, float preco_produto);
 void aumentar_estoque(Estoque *estoque, int codigo_produto, int qntd_aumentar, float *saldo);
 void modificar_preco(Estoque *estoque, int codigo_produto, float novo_preco);
-void vender(Estoque *estoque, int codigo_produto, float *preco_total, float *saldo);
+void vender(Estoque *estoque, int codigo_produto, float *preco_total);
 void consultar_estoque(Estoque *estoque);
 void consultar_saldo(float saldo);
 void finalizar_dia(Estoque *estoque);
