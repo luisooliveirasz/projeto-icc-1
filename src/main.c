@@ -2,33 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
-Obs.: remover esses comentários antes de entregar o projeto.
-
-Detalhes importantes a se lembrar:
-- Método de avaliação: código (clareza modularidade), execução (faz tudo que deveria e como
-deveria?), utilização de recursos (processamento e memória) e documentação interna.
-- Utilizar padrão C99, compilador GCC e ambiente Cygwin (Windows) ou shell (Linux/Mac)
-
-Formatação das entradas e saídas:
-----------------------------------------------------------
-Inserir produto   - IP_<nome>_<quantidade>_<preço>
-Aumentar estoque  - AE_<código>_<quantidade>
-Modificar preço   - MP_<código>_<preço>
-Vender            - VE_<código>_<código>_..._<código>_<-1>
-Consultar estoque - CE
-Consultar saldo   - CS
-Finalizar o dia   - FE
-----------------------------------------------------------
-
-Registro 15/06 (luís):
-- criei a struct Estoque para armazenar de forma dinâmica os produtos
-- troquei as comparações comando == '...' por strcmp(comando, "...")
-- Troquei o tipo da variável preco_total para float
-
-*/
-
-
 typedef struct {
     char nome[100];
     int quantidade;
@@ -49,8 +22,10 @@ void modificar_preco(Estoque *estoque, int codigo_produto, float novo_preco);
 void vender(Estoque *estoque, int codigo_produto, float *preco_total);
 void consultar_estoque(Estoque *estoque);
 void consultar_saldo(float saldo);
-void finalizar_dia(Estoque *estoque);
+void finalizar_dia(Estoque *estoque, float saldo);
 
+// Funções auxiliares
+void abrir_estoque(Estoque *estoque, float *saldo); // Carrega o estoque a partir dos dados armazenados na memória
 
 // Útil para a formatação da saída
 const char BARRA_HORIZONTAL[] = "--------------------------------------------------";
@@ -60,13 +35,14 @@ int main(void)
     char comando[3]; // 3 caracteres (2 para o comando + 1 para o terminador)
     float saldo = 100.0f; // Saldo inicial do caixa
 
-    Estoque estoque = {
+    Estoque estoque =
+    {
         .produtos = NULL,
         .qntd_produtos = 0,
         .capacidade = 10 // Capacidade inicial
     }; // para guardar os produtos cadastrados
 
-    estoque.produtos = (Produto*) malloc(sizeof(Produto) * estoque.capacidade);
+    abrir_estoque(&estoque, &saldo);
 
     scanf(" %s", comando);
 
@@ -121,16 +97,18 @@ int main(void)
         scanf(" %s", comando);
     }
     
-    finalizar_dia(&estoque);
+    finalizar_dia(&estoque, saldo);
 
     // Liberação de memória
     free(estoque.produtos);
+    estoque.produtos = NULL;
 
     return 0;
 }
 
 void inserir_produto(Estoque *estoque, char nome_produto[100], int qntd_produto, float preco_produto)
 {
+    // Realocação de memória no caso de "estouro" de capacidade do vetor
     if (estoque->qntd_produtos == estoque->capacidade)
     {
         estoque->capacidade *= 2;
@@ -155,24 +133,29 @@ void inserir_produto(Estoque *estoque, char nome_produto[100], int qntd_produto,
     p.quantidade = qntd_produto;
     p.preco = preco_produto;
 
+    // Armazena no estoque, com a segurança de que haverá espaço no vetor
     estoque->produtos[estoque->qntd_produtos++] = p;
 }
 
 void aumentar_estoque(Estoque *estoque, int codigo_produto, int qntd_aumentar, float *saldo)
 {
-    (estoque->produtos)[codigo_produto - 1].quantidade += qntd_aumentar;
-    float custo = (estoque->produtos)[codigo_produto - 1].preco * qntd_aumentar;
+    (estoque->produtos)[codigo_produto].quantidade += qntd_aumentar;
+    float custo = (estoque->produtos)[codigo_produto].preco * qntd_aumentar;
     *saldo -= custo;
 }
 
 void modificar_preco(Estoque *estoque, int codigo_produto, float novo_preco)
 {
-    (estoque->produtos)[codigo_produto - 1].preco = novo_preco;
+    (estoque->produtos)[codigo_produto].preco = novo_preco;
 }
 
 void vender(Estoque *estoque, int codigo_produto, float *preco_total)
 {
     Produto *p = &(estoque->produtos[codigo_produto]);
+    
+    // Vende apenas se houver unidades disponíveis no estoque
+    if (p->quantidade <= 0) return;
+
     p->quantidade--;
     *preco_total += p->preco;
     printf("%s %.2f\n", p->nome, p->preco);
@@ -185,10 +168,11 @@ void consultar_estoque(Estoque *estoque)
         printf("Estoque vazio.\n");
         return;
     }
+
     for(int i = 0; i < estoque->qntd_produtos; i++)
     {
         Produto *p = &(estoque->produtos[i]);
-        printf("Código: %d Nome: %s Quantidade: %d\n", i + 1, p->nome, p->quantidade);
+        printf("%d %s %d\n", i, p->nome, p->quantidade);
     }
 }
 
@@ -197,15 +181,54 @@ void consultar_saldo(float saldo)
     printf("Saldo: %.2f\n", saldo);
 }
 
-void finalizar_dia(Estoque *estoque)
+void finalizar_dia(Estoque *estoque, float saldo)
 {
     FILE *fp;
-    fp = fopen("estoque.txt", "wb");
+    fp = fopen("estoque.bin", "wb");
 
     if (!fp) return;
 
+    // Salva a quantidade de produtos, o saldo final do dia e o conteúdo do estoque
     fwrite(&estoque->qntd_produtos, sizeof(size_t), 1, fp);
+    fwrite(&saldo, sizeof(float), 1, fp);
     fwrite(estoque->produtos, sizeof(Produto), estoque->qntd_produtos, fp);
+
+    fclose(fp);
+}
+
+void abrir_estoque(Estoque *estoque, float *saldo)
+{
+    FILE *fp = fopen("estoque.bin", "rb");
+    
+    if (fp == NULL) // Sem estoque.bin
+    {
+        estoque->produtos = (Produto*) malloc(sizeof(Produto) * estoque->capacidade); // Aloca espaço vazio no caso de não haver estoque anterior
+        return;
+    }
+    
+    // Lê os dados referentes ao estado anterior do estoque e ao saldo
+    size_t qnt_produtos;
+    fread(&qnt_produtos, sizeof(size_t), 1, fp);
+
+    fread(saldo, sizeof(float), 1, fp);
+    
+    Produto *novo = malloc(qnt_produtos * sizeof(Produto));
+    if (novo == NULL)
+    {
+        printf("Sem espaço pra alocação do buffer");
+        return;
+    }
+    
+    fread(novo, sizeof(Produto), qnt_produtos, fp);
+    
+    // Libera a memória em caso do ponteiro apontar para um espaço de memória já alocado
+    free(estoque->produtos);
+    estoque->produtos = NULL;
+
+    // Atualiza o estoque conforme os dados carregados
+    estoque->produtos = novo;
+    estoque->qntd_produtos = qnt_produtos;
+    estoque->capacidade = qnt_produtos;
 
     fclose(fp);
 }
