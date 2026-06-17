@@ -160,6 +160,8 @@ void inserir_produto(Estoque *estoque, char nome_produto[100], int qntd_produto,
 void aumentar_estoque(Estoque *estoque, int codigo_produto, int qntd_aumentar, float *saldo)
 {
     (estoque->produtos)[codigo_produto - 1].quantidade += qntd_aumentar;
+    float custo = (estoque->produtos)[codigo_produto - 1].preco * qntd_aumentar;
+    *saldo -= custo;
 }
 
 void modificar_preco(Estoque *estoque, int codigo_produto, float novo_preco)
