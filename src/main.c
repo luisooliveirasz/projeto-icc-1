@@ -101,22 +101,22 @@ int main(void)
             scanf(" %d", &codigo_produto);
             while(codigo_produto != -1)
             {
-                vender(&estoque, codigo_produto, &preco_total, &saldo);
+                vender(&estoque, codigo_produto, &preco_total);
                 scanf(" %d", &codigo_produto);
             }
             printf("Total: %.2f\n", preco_total);
             saldo += preco_total;
-            printf("%s", BARRA_HORIZONTAL);
+            printf("%s\n", BARRA_HORIZONTAL);
         }
         else if(strcmp(comando, "CE") == 0)
         {
             consultar_estoque(&estoque);
-            printf("%s", BARRA_HORIZONTAL);
+            printf("%s\n", BARRA_HORIZONTAL);
         }
         else if(strcmp(comando, "CS") == 0)
         {
             consultar_saldo(saldo);
-            printf("%s", BARRA_HORIZONTAL);
+            printf("%s\n", BARRA_HORIZONTAL);
         }
         scanf(" %s", comando);
     }
